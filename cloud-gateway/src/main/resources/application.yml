@@ -1,0 +1,71 @@
+server:
+  port: 9191
+
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      routes:
+        - id: USER-SERVICE
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: backendB
+                fallbackuri: forward:fallBack/userServiceFallBack
+                statusCodes:
+                  - 404
+        - id: DEPARTMENT-SERVICE
+          uri: lb://DEPARTMENT-SERVICE
+          predicates:
+            - Path=/departments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: backendA
+                fallbackuri: forward:fallBack/departmentServiceFallBack
+                statusCodes:
+                  - 404
+
+
+#resilience4j.circuitbreaker:
+#  configs:
+#    default:
+#      register-health-indicator: true
+#  instances:
+#    backendA:
+#      baseconfig: default
+#    backendB:
+#      baseconfig: default
+
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      slidingWindowSize: 4
+      minimumNumberOfCalls: 2
+      permittedNumberOfCallsInHalfOpenState: 2
+#      automaticTransitionFromOpenToHalfOpenEnabled: true
+      waitDurationInOpenState: 20s
+#      failureRateThreshold: 2
+#      eventConsumerBufferSize: 10
+      recordExceptions:
+        - org.springframework.web.client.HttpServerErrorException
+        - java.io.IOException
+        - org.springframework.web.client.HttpClientErrorException
+        - org.springframework.web.client.RestClientException
+      ignoreExceptions:
+        - java.lang.IllegalStateException
+  instances:
+    backendA:
+      baseConfig: default
+      slowCallRateThreshold: 10
+      slowCallDurationThreshold: 10
+    backendB:
+      baseConfig: default
+      slowCallRateThreshold: 10
+      slowCallDurationThreshold: 10
+
+

@@ -1,6 +1,6 @@
 # spring-boot-microservices
 
-This is a small application to depict the microservices architecture.
+## This is a small application to depict the microservices architecture.
 
 There are 6 microservices
 1. User-service: which is responsible for creation and fetching information regarding the User. The user service also fetches the information of department by calling department service.
